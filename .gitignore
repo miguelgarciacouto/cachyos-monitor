@@ -1,0 +1,14 @@
+# Ignore build artifacts
+build/
+bin/
+obj/
+
+# Ignore third-party source (keep your repo clean)
+third_party/
+
+# Ignore IDE settings
+.vscode/
+.idea/
+
+# Ignore OS junk
+.DS_Store
