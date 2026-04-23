@@ -11,6 +11,7 @@
 #include "providers/psiProvider.hpp"
 #include "providers/schedulerProvider.hpp"
 #include "providers/zramProviders.hpp"
+#include "providers/ramProvider.hpp"
 
 int main() {
     using namespace ftxui; 
@@ -19,8 +20,9 @@ int main() {
 
     //Create the providers
     cachy::PsiProvider psiTracker;
-    cachy::schedulerProvider boreTracker;
+    cachy::schedulerProvider schedulerTracker;
     cachy::ZramProvider zramTracker;
+    cachy::RamProvider ramTracker;
 
     std::atomic<bool> refresh_ui = true;
     std::jthread refresh_thread([&] {
@@ -37,16 +39,16 @@ int main() {
     //Build the dyanmic document
     auto renderer = Renderer([&] {
 
-        auto boreColor = boreTracker.GetCurrentRate() > 100000 ? Color::Red : Color::Green;
+        auto schedulerColor = schedulerTracker.GetCurrentRate() > 100000 ? Color::Red : Color::Green;
 
-        auto bore_graph = [&](int width, int height) {
+        auto scheduler_graph = [&](int width, int height) {
 
             if(width <= 0 || height <= 0) {
                 return std::vector<int>(0);
             }
 
             std::vector<int> out(width, 0); 
-            auto hist = boreTracker.GetHistory();
+            auto hist = schedulerTracker.GetHistory();
             if (hist.empty()) {
                 return out;
             }
@@ -76,16 +78,22 @@ int main() {
             text(psiTracker.GetLatestPayload()) | color(Color::Green),
             separator(),
 
-            text(zramTracker.GetName() + ": ") | bold,
-            text(zramTracker.GetLatestPayload()) | color(Color::BlueLight),
-
+            hbox({
+                text(ramTracker.GetName() + ": ") | bold,
+                text(ramTracker.GetLatestPayload()) | size(WIDTH, EQUAL, 20) | color(Color::RedLight),
+                gauge(ramTracker.GetUsagePercentage()) | color(Color::RedLight) | flex,
+            }),
             separator(),
 
-            text(boreTracker.GetName() + ": ") | bold,
+            text(zramTracker.GetName() + ": ") | bold,
+            text(zramTracker.GetLatestPayload()) | color(Color::BlueLight),
+            separator(),
+
+            text(schedulerTracker.GetName() + ": ") | bold,
 
             hbox({
-                text(boreTracker.GetLatestPayload()) | color(boreColor) | size(WIDTH, EQUAL, 25),
-                graph(bore_graph) | color(boreColor) | size(HEIGHT, EQUAL, 5) | flex,
+                text(schedulerTracker.GetLatestPayload()) | color(schedulerColor) | size(WIDTH, EQUAL, 25),
+                graph(scheduler_graph) | color(schedulerColor) | size(HEIGHT, EQUAL, 5) | flex,
             }), 
             separator(),
             text("Press CTRL + X to exit") | dim | center,

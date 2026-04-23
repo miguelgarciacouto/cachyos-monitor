@@ -15,6 +15,7 @@ add_executable(${PROJECT_NAME}
     src/providers/psiProvider.cpp
     src/providers/schedulerProvider.cpp
     src/providers/zramProvider.cpp
+    src/providers/ramProvider.cpp
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE
